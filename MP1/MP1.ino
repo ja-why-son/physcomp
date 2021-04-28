@@ -12,12 +12,11 @@ const int G_PIN = 5;
 const int B_PIN = 6;
 
 // constants
-const int MAX_ANALOG_IN = 1024;
+const int MAX_ANALOG_IN = 676;
 const int MAX_ANALOG_OUT = 255;
 const int SOUND_THRESHOLD = 25;
 const float HUE_STEP = 0.01f;
 const int DELAY_INTERVAL = 50;
-const float FADE_PACE = 0.5;
 
 const int MIN_PHOTOCELL_VAL = 550;
 const int MAX_PHOTOCELL_VAL = 800;
@@ -77,16 +76,21 @@ class RGBLight {
     previousTime = millis();
    }
 
-   void gradualDim() {
-    unsigned long currentTime = millis();
-    if (currentTime - previousTime < DELAY_INTERVAL * 10) {
-      return;
+   void changeStatus() {
+    int redPace = -5;
+    int greenPace = -2;
+    if (_rgb[0] == 0 && _rgb[1] == 0 && _rgb[2] == 0) {
+      redPace = -redPace;
+      greenPace = -greenPace;
     }
-    for (int i = 0; i < 3; i++) {
-      _rgb[i] = (int)(_rgb[i] * FADE_PACE);
+    
+    for (int i = 0; i < 50; i++) {
+      _rgb[0] += redPace;
+      _rgb[1] += greenPace;
+      _rgb[2] = 0;
+      setColor();
+      delay(30);
     }
-    setColor();
-    previousTime = millis();
    }
 
 };
@@ -106,35 +110,34 @@ void loop() {
 
   _modeButton.update();
   if (_modeButton.isClicked()) {
-    _mode = (_mode + 1) % 3;
-    if (_mode == 2) {
+    _mode = (_mode + 1) % 4;
+    if (_mode == 3 || _mode == 0) {
       _rgbLight.setRGB(0, 0, 0);
-    } else if (_mode == 1) {
-      _rgbLight.setRGB(255, 80, 0);
+    } else if (_mode == 2) {
+      _rgbLight.setRGB(250, 100, 0);
     }
   }
 
-  if (_mode == 0) {
+  if (_mode == 1) {
     int photocellVal = analogRead(LIGHT_SENSOR_PIN);
     Serial.println(photocellVal);
     int ledVal = map(photocellVal, MIN_PHOTOCELL_VAL, MAX_PHOTOCELL_VAL, 0, MAX_ANALOG_OUT);
     ledVal = constrain(ledVal, 0, 255);
     int gVal = map(ledVal, 0, 255, 0, 80);
     _rgbLight.setRGB(ledVal, gVal, 0);
-  } else if (_mode == 1) {
+  } else if (_mode == 2) {
     if (digitalRead(LOFI_INPUT_PIN) == HIGH) {
       _rgbLight.changeColor();
     }
-  } else {
-    int soundLevel = 0;
+  } else if (_mode == 3) {
+    long soundLevel = 0;
     for (int i = 0; i < 100; i++) {
       soundLevel += analogRead(VOICE_SENSOR_PIN);
     }
     soundLevel /= 100;
-    if (soundLevel >0) {
-      _rgbLight.setRGB(255, 80, 0);
-    } else {
-      _rgbLight.gradualDim();
+    Serial.println(soundLevel);
+    if (soundLevel >= 360) {
+      _rgbLight.changeStatus();
     }
   }
 }
