@@ -49,7 +49,7 @@ void loop() {
 
   // Setup text rendering parameters
   _display.setTextSize(1);
-  _display.setTextColor(WHITE, BLACK);
+  _display.setTextColor(BLACK, WHITE);
 
   // Measure the text with those parameters
   _display.getTextBounds(strHello, 0, 0, &x, &y, &textWidth, &textHeight);
