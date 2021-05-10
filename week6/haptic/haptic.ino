@@ -12,7 +12,6 @@ void setup() {
 }
 
 void loop() {
-//  int strength = analogRead(POTENTIOMETER_INPUT_PIN);
   int mappedStrength = map(_strength, 0, 1024, 0, 255);
   Serial.println(_strength);
   analogWrite(VIBROMOTOR_OUTPUT_PIN, mappedStrength);
