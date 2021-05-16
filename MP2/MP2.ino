@@ -94,7 +94,7 @@ class World {
     : blocks({Block(0, 0), Block(0, 0), Block(0, 0), Block(0, 0),
       Block(0, 0), Block(0, 0), Block(0, 0)}),
       playerXVelocity(PLAYER_X_VELOCITY), playerYVelocity(1),
-      worldScrollSpeed(INITIAL_WORLD_SCROLL_SPEED), player(Player()) {  
+      worldScrollSpeed(INITIAL_WORLD_SCROLL_SPEED), player(Player()), levelingUp(false) {  
 //    player = Player();
     newGame();
     
@@ -112,6 +112,7 @@ class World {
     levelProgress = 0;
     placePlayerOnBlock();
     worldScrollSpeed = INITIAL_WORLD_SCROLL_SPEED;
+    levelingUp = false;
   }
 
   boolean updateWorld() {
@@ -163,12 +164,17 @@ class World {
         if (levelProgress == BLOCK_COUNT) {
           levelProgress = 0;
           level++;
+          levelingUp = true;
+          tone(BUZZER_PIN, 262);
+          levelingUpStartMillis = millis();
           if (level % 5 == 0) {
             worldScrollSpeed += 1;
           }
         }
       }
     }
+
+    levelUpSound();
 
     return true;
   }
@@ -240,6 +246,19 @@ class World {
     }   
   }
 
+  void levelUpSound() {
+    if (levelingUp) {
+      long current = millis();
+      if (current - levelingUpStartMillis >= 150 ) {
+        noTone(BUZZER_PIN);
+        digitalWrite(BUZZER_PIN, LOW);
+        levelingUp = false;
+      } else if (current - levelingUpStartMillis >= 75) {
+        tone(BUZZER_PIN, 392);
+      }
+    }
+  }
+
   Player player;
   int16_t playerXVelocity;
   int16_t playerYVelocity;
@@ -247,6 +266,8 @@ class World {
   Block blocks[BLOCK_COUNT];
   int level;
   int levelProgress;
+  boolean levelingUp;
+  long levelingUpStartMillis;
 };
 
 
