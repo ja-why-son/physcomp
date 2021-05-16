@@ -14,6 +14,7 @@ Adafruit_SSD1306 _display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 const int LEFT_BUTTON_PIN = 12;
 const int RIGHT_BUTTON_PIN = 13;
 const int BUZZER_PIN = 11;
+const int VIBROMOTOR_PIN = 10;
 
 PushButton _leftButton(LEFT_BUTTON_PIN);
 PushButton _rightButton(RIGHT_BUTTON_PIN);
@@ -30,6 +31,7 @@ void setup() {
   pinMode(LEFT_BUTTON_PIN, INPUT_PULLUP);
   pinMode(RIGHT_BUTTON_PIN, INPUT_PULLUP);
   pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(VIBROMOTOR_PIN, OUTPUT);
 
   _leftButton.setActiveLogic(LOW);
   _rightButton.setActiveLogic(LOW);
@@ -94,8 +96,8 @@ class World {
     : blocks({Block(0, 0), Block(0, 0), Block(0, 0), Block(0, 0),
       Block(0, 0), Block(0, 0), Block(0, 0)}),
       playerXVelocity(PLAYER_X_VELOCITY), playerYVelocity(1),
-      worldScrollSpeed(INITIAL_WORLD_SCROLL_SPEED), player(Player()), levelingUp(false) {  
-//    player = Player();
+      worldScrollSpeed(INITIAL_WORLD_SCROLL_SPEED), player(Player()), levelingUp(false),
+      isDropping(false) {  
     newGame();
     
   }
@@ -147,6 +149,9 @@ class World {
           isFreeFall = false;
           player.y = blocks[i].y - player.radius() - worldScrollSpeed;
           playerYVelocity = 0;
+          isDropping = true;
+          analogWrite(VIBROMOTOR_PIN, 150);
+          droppingStartMillis = millis();
         }
       }
       if (isFreeFall) {
@@ -154,6 +159,8 @@ class World {
         playerYVelocity += GRAVITY;  
       }
     }
+
+    dropToBlockHaptic();
 
     for (int i = 0; i < BLOCK_COUNT; i++) {
       blocks[i].y -= worldScrollSpeed;
@@ -200,7 +207,6 @@ class World {
     player.x = lowestBlock.x + (BLOCK_WIDTH / 2);
     player.y = lowestBlock.y - player.radius();
   }
-
 
   boolean standingOnBlock() {
     for (int i = 0; i < BLOCK_COUNT; i++) {
@@ -259,6 +265,17 @@ class World {
     }
   }
 
+  void dropToBlockHaptic() {
+    if (isDropping) {
+      long current = millis();
+      if (current - droppingStartMillis >= 50) {
+        isDropping = false;
+        analogWrite(VIBROMOTOR_PIN, 0);
+      }
+    }
+
+  }
+
   Player player;
   int16_t playerXVelocity;
   int16_t playerYVelocity;
@@ -268,6 +285,8 @@ class World {
   int levelProgress;
   boolean levelingUp;
   long levelingUpStartMillis;
+  boolean isDropping;
+  long droppingStartMillis;
 };
 
 
