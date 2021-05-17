@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <EEPROM.h>
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
@@ -15,9 +16,12 @@ const int LEFT_BUTTON_PIN = 12;
 const int RIGHT_BUTTON_PIN = 13;
 const int BUZZER_PIN = 11;
 const int VIBROMOTOR_PIN = 10;
+const int LED_PIN = 4;
+const int BEST_ADDRESS= 1;
 
 PushButton _leftButton(LEFT_BUTTON_PIN);
 PushButton _rightButton(RIGHT_BUTTON_PIN);
+int _bestScore;
 
 void setup() {
   Serial.begin(9600);
@@ -32,12 +36,25 @@ void setup() {
   pinMode(RIGHT_BUTTON_PIN, INPUT_PULLUP);
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(VIBROMOTOR_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
 
   _leftButton.setActiveLogic(LOW);
   _rightButton.setActiveLogic(LOW);
   
   _display.setRotation(1);
   _display.clearDisplay();
+
+
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
+  _rightButton.update();
+  _leftButton.update();
+  EEPROM.get(BEST_ADDRESS, _bestScore);
+  Serial.println(_bestScore);
+  if (_rightButton.isActive() && _leftButton.isActive()) {
+    EEPROM.put(BEST_ADDRESS, 1);
+    _bestScore = 1;
+  }
 
   enterMenuSound();
 }
@@ -119,6 +136,10 @@ class World {
 
   boolean updateWorld() {
     if (player.top() <= 9 || player.bottom() >= 128) {
+      if (level > _bestScore) {
+        EEPROM.put(BEST_ADDRESS, level);
+        _bestScore = level;
+      }
       return false;
     }
     
@@ -319,7 +340,6 @@ void loop() {
   } else {
     // press any button to start the game
     // display menu
-    // if button pressed, _inGame = true, _world.newGame();
     _display.clearDisplay();
     drawGameMenu();
     _leftButton.update();
@@ -355,6 +375,15 @@ void drawGameMenu() {
   _display.setCursor(_display.width() / 2 - text2Width / 2, _display.height() / 2 + text2Height / 2);
   _display.print(str2);
 
+  const char str3[] = "Best: ";
+  uint16_t text3Width, text3Height;
+  _display.getTextBounds(str3, 0, 0, &x, &y, &text3Width, &text3Height);
+
+  _display.setCursor(_display.width() / 2 - text3Width / 2 - 5, (_display.height() / 4) * 3 + text2Height / 2);
+  _display.print(str3);
+  _display.print(_bestScore);
+
+
 }
 
 void drawGameOver(int style) {
@@ -387,24 +416,34 @@ void drawGameOver(int style) {
 }
 
 void gameOverSound() {
+  digitalWrite(LED_PIN, HIGH);
   tone(BUZZER_PIN, 523);
   delay(100);
+  digitalWrite(LED_PIN, LOW);
   tone(BUZZER_PIN, 440);
   delay(100);
+  digitalWrite(LED_PIN, HIGH);
   tone(BUZZER_PIN, 493);
   delay(100);
+  digitalWrite(LED_PIN, LOW);
   tone(BUZZER_PIN, 392);
   delay(100);
+  digitalWrite(LED_PIN, HIGH);
   tone(BUZZER_PIN, 440);
   delay(100);
+  digitalWrite(LED_PIN, LOW);
   tone(BUZZER_PIN, 350);
   delay(100);
+  digitalWrite(LED_PIN, HIGH);
   tone(BUZZER_PIN, 392);
   delay(100);
+  digitalWrite(LED_PIN, LOW);
   tone(BUZZER_PIN, 330);
   delay(100);
+  digitalWrite(LED_PIN, HIGH);
   tone(BUZZER_PIN, 294);
   delay(100);
+  digitalWrite(LED_PIN, LOW);
   noTone(BUZZER_PIN);
   digitalWrite(BUZZER_PIN, LOW);
 }
