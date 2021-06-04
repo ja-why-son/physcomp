@@ -30,6 +30,7 @@ PushButton _button(BUTTON_PIN);
 BluetoothSerial SerialBT;
 
 boolean connected;
+boolean gravity = true;
 
 void setup() {
   Serial.begin(9600);
@@ -60,15 +61,16 @@ void setup() {
     while (1) yield();
   }
   Serial.println("LIS3DH found!");
-  
+
+  _display.setRotation(2);
   _display.clearDisplay();         
 }
 
 void loop() {
   // On each loop, we'll want to clear the display so we're not writing over
   // previously drawn data
-  SerialBT.println("Hello");
 
+  // received via serial 
   String received = "";
 
   if (SerialBT.available()) {
@@ -82,6 +84,7 @@ void loop() {
     connected = false;
   }
 
+  // accelerometer
   sensors_event_t event;
   lis.getEvent(&event);
   float acceleration_square_sum = pow(event.acceleration.x, 2) 
@@ -89,9 +92,31 @@ void loop() {
                               + pow(event.acceleration.z, 2);
   
   float acc = sqrt(acceleration_square_sum);
-  Serial.println(acc);
+  Serial.print(event.acceleration.x);
+  Serial.print(",");
+  Serial.print(event.acceleration.y);
+  Serial.print(",");
+  Serial.println(event.acceleration.z);
+  
+  SerialBT.print(event.acceleration.x);
+  SerialBT.print(",");
+  SerialBT.print(event.acceleration.y);
+  SerialBT.print(",");
+  SerialBT.println(event.acceleration.z);
 
   _button.update();
+
+  if (_button.isClicked()) {
+    Serial.println("buttonPressed");
+    SerialBT.println("buttonPressed");
+  }
+  
+  oledDisplayMessage();
+
+  delay(50);
+}
+
+void oledDisplayMessage() {
   _display.clearDisplay(); 
   
   int16_t x, y;
@@ -109,21 +134,13 @@ void loop() {
   _display.setCursor(_display.width() / 2 - textWidth / 2, _display.height() / 2 - textHeight / 2);
 
   // Print out the string
-//  _display.print(strHello);
-//  if (_button.isActive()) {
-//    _display.print("Button Pressed");
-//  } else {
-//    _display.print("Hello Makers!!");
-//  }
   if (connected) {
     _display.print("Serial connected");
   } else {
-    _display.print("Hello Makers!!");
+    _display.print("Waiting to be connected to serial...");
   }
 
 
   // Render the graphics buffer to screen
-  _display.display(); 
-
-  delay(50);
+  _display.display();
 }
