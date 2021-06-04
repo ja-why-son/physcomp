@@ -45,19 +45,17 @@
 
         function onSerialConnectionOpened(eventSender) {
             console.log("onSerialConnectionOpened", eventSender);
+            serialWriteTextData("start");
         }
 
         function onSerialConnectionClosed(eventSender) {
             console.log("onSerialConnectionClosed", eventSender);
+            serialWriteTextData("end");
         }
 
         function onSerialDataReceived(eventSender, newData) {
             console.log("onSerialDataReceived", newData);
-            if (newData == "X.X") {
-                rcvdText.textContent = "";
-            } else {
-                rcvdText.textContent = newData;
-            }
+            rcvdText.textContent = newData;
         }
 
         async function onConnectButtonClick() {
@@ -71,13 +69,8 @@
 
         // Called automatically when the input textbox is updated
         function updateOutputText(e) {
-            if (e.target.value.length > 15) {
-                outputText.textContent = "TOO MUCH TEXT"
-                serialWriteTextData("X.X");
-            } else {
-                outputText.textContent = e.target.value;
-                serialWriteTextData(e.target.value);
-            }
+            outputText.textContent = e.target.value;
+            serialWriteTextData(e.target.value);
         }
 
         // Send text data over serial
