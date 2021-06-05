@@ -73,11 +73,8 @@ void loop() {
   // received via serial 
   String received = "";
 
-  if (SerialBT.available()) {
-    received = SerialBT.readStringUntil('\n');
-  } else if (Serial.available()) {
-    received = Serial.readStringUntil('\n');
-  }
+
+  received = SerialBT.readStringUntil('\n');
   if (received == "start") {
     connected = true;
   } else if (received == "end") {
@@ -113,7 +110,7 @@ void loop() {
   
   oledDisplayMessage();
 
-  delay(50);
+  delay(5);
 }
 
 void oledDisplayMessage() {
