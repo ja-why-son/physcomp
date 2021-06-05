@@ -13,8 +13,18 @@ let disperse = false;
 let gravityX = 0;
 let gravityY = 0;
 
+let accX = 0;
+let accY = 0;
+let accZ = 0;
+
+let changeFactor = 3;
+
+let boundTheta = 50;
+
+let speedMultiplier = 2;
+
 function setup() {
-  createCanvas(640, 320);
+  createCanvas(1000, 500);
   video = createCapture(VIDEO);
   video.size(width, height);
 
@@ -28,10 +38,17 @@ function setup() {
       let pose = results[i].pose;
       let rightWrist = pose.rightWrist;
       if (rightWrist.confidence > 0.2) {
-        gravityX = rightWrist.x;
-        gravityY = rightWrist.y;
+        if (abs(rightWrist.x - gravityX) / width < 0.2
+           && abs(rightWrist.y - gravityY) / height < 0.2
+           && rightWrist.x <= width || rightWrist.x > 0
+           && rightWrist.y <= height || rightWrist.y > 0){
+          gravityX = rightWrist.x;
+          gravityY = rightWrist.y;
+        }
       }
-      serialWriteTextData(gravityX + "," + gravityY);
+      let oledX = limit((gravityX / width) * 128, 0, 128);
+      let oledY = limit((gravityY / height) * 64, 0, 64);
+      serialWriteTextData(Math.round(oledX) + "," + Math.round(oledY));
     }
   });
   // Hide the video element, and just show the canvas
@@ -44,6 +61,16 @@ function setup() {
   }
   gravityX = width / 2;
   gravityY = height / 2;
+}
+
+function limit(number, min, max) {
+  if (number > max) {
+    return max;
+  } else if (number < min) {
+    return min;
+  } else {
+    return number;
+  }
 }
 
 function modelReady() {
@@ -76,17 +103,27 @@ class Particle {
     this.spd = new p5.Vector(random(2), random(2));
     this.acc = new p5.Vector();
     this.turnFactor = random(3, 10);
+    this.r = random(320, 420) % 360;
+    this.g = 90;
+    this.b = 100;
 
-    this.col = color(random(320, 420) % 360, 90, 100);
   }
 
   update() {
     this.prev = new p5.Vector(this.pos.x, this.pos.y);
-    if (this.pos.x > width || this.pos.x < 0) {
-      this.spd.x *= -0.9;
+    if (this.pos.x > width + boundTheta || this.pos.x < 0 - boundTheta) {
+      if (!disperse) {
+        this.spd.x *= -0.9;
+      } else {
+        return;
+      }
     }
-    if (this.pos.y < 0 || this.pos.y > height) {
-      this.spd.y *= -0.9;
+    if (this.pos.y < 0 - boundTheta || this.pos.y > height + boundTheta) {
+      if (!disperse) {
+        this.spd.y *= -0.9;
+      } else {
+        return;
+      }
     }
     let attraction = new p5.Vector(gravityX, gravityY);
     attraction.sub(this.pos);
@@ -94,7 +131,7 @@ class Particle {
     this.acc.normalize();
     this.acc.div(this.turnFactor);
     this.spd.add(this.acc);
-    this.spd.limit(spdLimit * (1 / 50));
+    this.spd.limit(spdLimit * (1 / 40));
     if (disperse) {
       this.pos.sub(this.spd);
     } else {
@@ -103,9 +140,19 @@ class Particle {
   }
 
   draw() {
+    if (pow(accX, 2) + pow(accY, 2), + pow(accZ, 2) > 111) {
+      this.r = this.generateNewSubColor(this.r, accX);
+      this.g = this.generateNewSubColor(this.g, accY);
+      this.b = this.generateNewSubColor(this.b, accZ);
+    } 
     noStroke();
-    fill(this.col);
+    fill(color(this.r, this.g, this.b));
     ellipse(this.pos.x, this.pos.y, 10, 10);
-    stroke(this.col);
+    stroke(color(this.r, this.g, this.b));
+  }
+
+  generateNewSubColor(og, input) {
+    input = abs(input);
+    return random(og - changeFactor * input / 2, og + changeFactor * input / 2);
   }
 }

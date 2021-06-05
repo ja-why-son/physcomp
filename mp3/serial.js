@@ -13,18 +13,22 @@ async function onButtonConnectToSerialDevice() {
     }
 }
 
+async function onButtonDisconnectToSerialDevice() {
+    if (serial.isOpen()) {
+        await serial.close();
+    }
+}
+
 function onSerialErrorOccurred(eventSender, error) {
     console.log("onSerialErrorOccurred", error);
 }
 
 function onSerialConnectionOpened(eventSender) {
     console.log("onSerialConnectionOpened", eventSender);
-    serialWriteTextData("start");
 }
 
 function onSerialConnectionClosed(eventSender) {
     console.log("onSerialConnectionClosed", eventSender);
-    serialWriteTextData("end");
 }
 
 function onSerialDataReceived(eventSender, newData) {
@@ -32,23 +36,19 @@ function onSerialDataReceived(eventSender, newData) {
     rcvdText.textContent = newData;
     if (newData === "buttonPressed") {
         disperse = !disperse;
+    } else {
+        let raw = newData;
+        let processed = raw.split(",");
+        accX = processed[0];
+        accY = processed[1];
+        accZ = processed[2];
     }
 }
 
 async function onConnectButtonClick() {
     console.log("Connect button clicked!");
 }
-const inputText = document.querySelector('input');
-const outputText = document.getElementById('output-text');
 const rcvdText = document.getElementById('received-text')
-
-inputText.addEventListener('input', updateOutputText);
-
-// Called automatically when the input textbox is updated
-function updateOutputText(e) {
-    outputText.textContent = e.target.value;
-    serialWriteTextData(e.target.value);
-}
 
 // Send text data over serial
 async function serialWriteTextData(textData) {
