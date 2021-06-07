@@ -23,6 +23,10 @@ let boundTheta = 50;
 
 let speedMultiplier = 2;
 
+let colorLowerBound = 320;
+let colorUpperBound = 420;
+let lastColorChanged = Date.now();
+
 function setup() {
   createCanvas(1000, 500);
   video = createCapture(VIDEO);
@@ -82,12 +86,29 @@ function draw() {
   scale(-1, 1);
   // image(video, 0, 0, width, height);
 
-  // We can call both functions to draw all keypoints and the skeletons
+  let colorChanged = false;
+  let now = Date.now();
+  if (pow(accX, 2) + pow(accY, 2), + pow(accZ, 2) > 111 && now - lastColorChanged > 1000) {
+    let middleColor = (colorLowerBound + colorUpperBound) / 2;
+    let h = random(middleColor - 75, middleColor + 75);
+    colorLowerBound = h - 50;
+    colorUpperBound = h + 50;
+    if (colorLowerBound > colorUpperBound) {
+      let temp = colorLowerBound;
+      colorLowerBound = colorUpperBound;
+      colorUpperBound = temp;
+    }
+    lastColorChanged = Date.now();
+    colorChanged = true;
+  } 
   noStroke();
   fill(0, 0, 0, 0.1);
   rect(-1, -1, width + 1, height + 1);
   for (i = 0; i < m.length; i++) {
     let a = m[i];
+    if (colorChanged) {
+      a.updateColor();
+    }
     a.update();
     a.draw();
   }
@@ -103,8 +124,8 @@ class Particle {
     this.spd = new p5.Vector(random(2), random(2));
     this.acc = new p5.Vector();
     this.turnFactor = random(3, 10);
-    this.r = random(320, 420) % 360;
-    this.g = 90;
+    this.h = random(colorLowerBound, colorUpperBound) % 360;
+    this.s = 90;
     this.b = 100;
 
   }
@@ -140,15 +161,14 @@ class Particle {
   }
 
   draw() {
-    if (pow(accX, 2) + pow(accY, 2), + pow(accZ, 2) > 111) {
-      this.r = this.generateNewSubColor(this.r, accX);
-      this.g = this.generateNewSubColor(this.g, accY);
-      this.b = this.generateNewSubColor(this.b, accZ);
-    } 
     noStroke();
-    fill(color(this.r, this.g, this.b));
+    fill(color(this.h, this.s, this.b));
     ellipse(this.pos.x, this.pos.y, 10, 10);
-    stroke(color(this.r, this.g, this.b));
+    stroke(color(this.h, this.s, this.b));
+  }
+
+  updateColor() {
+    this.h = random(colorLowerBound, colorUpperBound) % 360;
   }
 
   generateNewSubColor(og, input) {
