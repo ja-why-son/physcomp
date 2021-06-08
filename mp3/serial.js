@@ -33,7 +33,6 @@ function onSerialConnectionClosed(eventSender) {
 
 function onSerialDataReceived(eventSender, newData) {
     console.log("onSerialDataReceived", newData);
-    rcvdText.textContent = newData;
     if (newData === "buttonPressed") {
         disperse = !disperse;
     } else {
@@ -48,7 +47,6 @@ function onSerialDataReceived(eventSender, newData) {
 async function onConnectButtonClick() {
     console.log("Connect button clicked!");
 }
-const rcvdText = document.getElementById('received-text')
 
 // Send text data over serial
 async function serialWriteTextData(textData) {

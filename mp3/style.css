@@ -1,8 +1,29 @@
 html, body {
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
 }
 
 canvas {
+  margin: auto;
   display: block;
+}
+
+#button-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  margin: auto;
+  max-height: 30px;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  width: 1000px;
+}
+
+h1 {
+  margin: auto;
+  margin-top: 30px;
+
 }

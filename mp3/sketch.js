@@ -114,7 +114,6 @@ function draw() {
   }
   fill(255, 0, 0);
   noStroke();
-  ellipse(gravityX, gravityY, 10, 10);
 }
 
 class Particle {
