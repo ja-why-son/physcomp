@@ -34,8 +34,8 @@ boolean gravity = true;
 int gravityX = 64;
 int gravityY = 32;
 
-int gravityXWindow[10];
-int gravityYWindow[10];
+int gravityXWindow[5];
+int gravityYWindow[5];
 
 int windowIndex = 0;
 
@@ -72,7 +72,7 @@ void setup() {
   _display.setRotation(2);
   _display.clearDisplay();
 
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 5; i++) {
     gravityXWindow[i] = 64;
     gravityYWindow[i] = 32;
   }
@@ -107,17 +107,17 @@ void loop() {
     if (x > 0 && x < 128 && y > 0 && y < 128) {
       gravityXWindow[windowIndex] = x;
       gravityYWindow[windowIndex] = y;
-      windowIndex = (windowIndex + 1) % 10;
+      windowIndex = (windowIndex + 1) % 5;
       
       int sumX = 0;
       int sumY = 0;
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 5; i++) {
         sumX += gravityXWindow[i];
         sumY += gravityYWindow[i];
       }
       
-      gravityX = sumX / 10;
-      gravityY = sumY / 10;
+      gravityX = sumX / 5;
+      gravityY = sumY / 5;
     }
 
   }
